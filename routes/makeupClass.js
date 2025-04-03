@@ -1,44 +1,34 @@
 const express = require('express');
 const router = express.Router();
 const MakeupClass = require('../models/MakeupClass');
-const { verifyToken, isTeacher, isAdmin } = require("../middlewares/authMiddleware");
+const { verifyToken ,isAdmin, isTeacherOrAdmin, authMiddleware} = require("../middlewares/authMiddleware");
 
-// Đăng ký dạy bù 
-router.post("/dangky-daybu", verifyToken, isTeacher, async (req, res) => {
+// Đăng ký lịch dạy bù (Chỉ giáo viên đăng nhập mới có thể đăng ký)
+router.post("/dangky-daybu", verifyToken, authMiddleware, async (req, res) => {
     try {
-        const { sotuan, monhoc, tiethoc, buoihoc, lop, lido } = req.body;
+        const { songay, monhoc, tiethoc, buoihoc, lop, lido } = req.body;
 
-        // Kiểm tra trùng lịch dạy bù
-        const existingClass = await MakeupClass.findOne({
-            sotuan,
-            lop,
-            buoihoc, // Kiểm tra buổi học
-            tiethoc: { $in: tiethoc } // Kiểm tra tiết bị trùng
-        });
-
-        if (existingClass) {
-            return res.status(400).json({ success: false, message: "Trùng lịch dạy, vui lòng chọn tiết khác!" });
-        }
-
-        // Tạo lịch dạy bù, tự động lấy tên giáo viên & bộ môn từ tài khoản đăng nhập
         const newMakeupClass = new MakeupClass({
-            sotuan,
+            songay,
             monhoc,
             tiethoc,
             buoihoc,
             lop,
             lido,
-            giaovien: req.user.ten,  // Lấy tên giáo viên từ tài khoản đăng nhập
-            bomon: req.user.bomon,   // Lấy bộ môn từ tài khoản đăng nhập
-            status: "pending"        // Mặc định trạng thái chờ duyệt
+            giaovien: req.user.ten,  // Lấy từ người dùng đăng nhập
+            bomon: req.user.bomon,   // Lấy từ người dùng đăng nhập
+            trangthai: "Cho duyet"
         });
 
         await newMakeupClass.save();
-        res.json({ success: true, message: "Đăng ký dạy bù thành công!" });
+        res.status(201).json({ message: "Đăng ký dạy bù thành công!", data: newMakeupClass });
+
     } catch (error) {
-        res.status(500).json({ success: false, message: "Lỗi server!" });
+        res.status(500).json({ message: error.message });
     }
 });
+
+
 
 
 
@@ -83,7 +73,7 @@ router.put('/duyet-daybu/:id', verifyToken, isAdmin, async (req, res) => {
             return res.status(404).json({ success: false, message: 'Không tìm thấy lịch dạy bù!' });
         }
 
-        res.json({ success: true, message: `Lịch dạy bù đã ${status === 'approved' ? 'được duyệt' : 'bị từ chối'}!` });
+        res.json({ success: true, message: "Lịch dạy bù đã ${status === 'approved' ? 'được duyệt' : 'bị từ chối'}! "});
     } catch (error) {
         res.status(500).json({ success: false, message: 'Lỗi server!' });
     }
@@ -147,28 +137,28 @@ router.get("/requests", async (req, res) => {
 });
 
 
-router.put("/update/:id", async (req, res) => {
-    try {
-        const { status } = req.body;
-        if (!["approved", "rejected"].includes(status)) {
-            return res.status(400).json({ message: "Trạng thái không hợp lệ" });
-        }
+// router.put("/update/:id", async (req, res) => {
+//     try {
+//         const { status } = req.body;
+//         if (!["approved", "rejected"].includes(status)) {
+//             return res.status(400).json({ message: "Trạng thái không hợp lệ" });
+//         }
 
-        const updatedClass = await MakeupClass.findByIdAndUpdate(
-            req.params.id,
-            { status },
-            { new: true }
-        );
+//         const updatedClass = await MakeupClass.findByIdAndUpdate(
+//             req.params.id,
+//             { status },
+//             { new: true }
+//         );
 
-        if (!updatedClass) {
-            return res.status(404).json({ message: "Không tìm thấy yêu cầu" });
-        }
+//         if (!updatedClass) {
+//             return res.status(404).json({ message: "Không tìm thấy yêu cầu" });
+//         }
 
-        res.json({ message: "Cập nhật thành công", updatedClass });
-    } catch (error) {
-        res.status(500).json({ message: "Lỗi server" });
-    }
-});
+//         res.json({ message: "Cập nhật thành công", updatedClass });
+//     } catch (error) {
+//         res.status(500).json({ message: "Lỗi server" });
+//     }
+// });
 
 
 // router.delete("/delete/:id", async (req, res) => {
