@@ -87,5 +87,18 @@ router.delete('/xoa-taikhoan/:id', verifyToken, isAdmin, async (req, res) => {
         res.status(500).json({ success: false, message: 'Lỗi server!', error: error.message });
     }
 });
+// Xem danh sách giáo viên
+router.get('/danhsach-giaovien', verifyToken, isAdmin, async (req, res) => {
+    try {
+        // Lấy tất cả người dùng có role là 'giaovien'
+        const danhSach = await User.find({ role: 'teacher' }).select('-password'); // ẩn password
+
+        res.json({ success: true, data: danhSach });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Lỗi server!', error: error.message });
+    }
+});
+
+
 
 module.exports = router;

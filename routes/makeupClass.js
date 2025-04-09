@@ -33,7 +33,7 @@ router.post("/dangky-daybu", verifyToken, authMiddleware, async (req, res) => {
 
 
 // Lấy danh sách lịch dạy bù (có phân quyền)
-router.get('/danhsach-daybu', verifyToken, async (req, res) => {
+router.get('/danhsach-daybu', verifyToken,isTeacherOrAdmin, async (req, res) => {
     try {
         let filter = {};
         
@@ -52,32 +52,33 @@ router.get('/danhsach-daybu', verifyToken, async (req, res) => {
 });
 
 
-// Admin duyệt lịch dạy bù
+// PUT /makeup-class/duyet-daybu/:id
 router.put('/duyet-daybu/:id', verifyToken, isAdmin, async (req, res) => {
     try {
-        const { status } = req.body;
+        const { trangthai } = req.body;
 
-        // Kiểm tra trạng thái hợp lệ
-        if (!['approved', 'rejected'].includes(status)) {
+        if (!['Dong y', 'Tu choi'].includes(trangthai)) {
             return res.status(400).json({ success: false, message: 'Trạng thái không hợp lệ!' });
         }
 
-        // Cập nhật trạng thái trong DB
-        const updatedClass = await MakeupClass.findByIdAndUpdate(
+        const updated = await MakeupClass.findByIdAndUpdate(
             req.params.id,
-            { status },
+            { trangthai },
             { new: true }
         );
 
-        if (!updatedClass) {
+        if (!updated) {
             return res.status(404).json({ success: false, message: 'Không tìm thấy lịch dạy bù!' });
         }
 
-        res.json({ success: true, message: "Lịch dạy bù đã ${status === 'approved' ? 'được duyệt' : 'bị từ chối'}! "});
-    } catch (error) {
+        res.json({ success: true, message: `Lịch đã được cập nhật trạng thái: ${trangthai}` });
+    } catch (err) {
+        console.error(err);
         res.status(500).json({ success: false, message: 'Lỗi server!' });
     }
 });
+
+
 
 
 

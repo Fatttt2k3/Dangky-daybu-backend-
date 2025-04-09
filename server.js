@@ -10,6 +10,7 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
+
 // Kết nối MongoDB
 mongoose.connect(process.env.MONGO_URI, {
     
@@ -19,11 +20,11 @@ mongoose.connect(process.env.MONGO_URI, {
 // Import routes
 const authRoutes = require('./routes/auth');
 const makeupClassRoutes = require('./routes/makeupClass');
+const systemRoutes = require("./routes/system");
 
 app.use('/auth', authRoutes);
 app.use('/makeup-class', makeupClassRoutes);
 //system
-const systemRoutes = require("./routes/system");
 app.use("/api/system", systemRoutes);
 
 const PORT = process.env.PORT || 5000;
