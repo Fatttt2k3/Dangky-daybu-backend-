@@ -85,6 +85,7 @@ router.delete("/xoa-tuan/:id", verifyToken, isAdmin, async (req, res) => {
     }
 });
 
+
 // API lấy danh sách môn học
 router.get("/monhoc", async (req, res) => {
     try {
@@ -134,5 +135,37 @@ router.get("/tuanhoc", async (req, res) => {
         res.status(500).json({ message: "Lỗi server!" });
     }
 });
+
+// Sửa môn học
+router.put("/sua-monhoc/:id", verifyToken, isAdmin, async (req, res) => {
+    try {
+        const monhoc = await Monhoc.findByIdAndUpdate(
+            req.params.id,
+            { name: req.body.name },
+            { new: true }
+        );
+        if (!monhoc) {
+            return res.status(404).json({ success: false, message: "Không tìm thấy môn học!" });
+        }
+        res.json({ success: true, message: "Cập nhật môn học thành công!", data: monhoc });
+    } catch (error) {
+        res.status(500).json({ success: false, message: "Lỗi server!" });
+    }
+});
+
+// Xoá môn học
+router.delete("/xoa-monhoc/:id", verifyToken, isAdmin, async (req, res) => {
+    try {
+        const monhoc = await Monhoc.findById(req.params.id);
+        if (!monhoc) {
+            return res.status(404).json({ success: false, message: "Môn học không tồn tại!" });
+        }
+        await Monhoc.findByIdAndDelete(req.params.id);
+        res.json({ success: true, message: "Xóa môn học thành công!" });
+    } catch (error) {
+        res.status(500).json({ success: false, message: "Lỗi server!" });
+    }
+});
+
 
 module.exports = router;
