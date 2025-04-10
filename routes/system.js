@@ -167,5 +167,93 @@ router.delete("/xoa-monhoc/:id", verifyToken, isAdmin, async (req, res) => {
     }
 });
 
+// === LỚP ===
+
+// Sửa lớp
+router.put("/sua-lop/:id", verifyToken, isAdmin, async (req, res) => {
+    try {
+        const updated = await Lop.findByIdAndUpdate(req.params.id, { name: req.body.name }, { new: true });
+        if (!updated) return res.status(404).json({ success: false, message: "Không tìm thấy lớp!" });
+        res.json({ success: true, message: "Cập nhật lớp thành công!", data: updated });
+    } catch (err) {
+        res.status(500).json({ success: false, message: "Lỗi server!" });
+    }
+});
+
+// Xóa lớp
+router.delete("/xoa-lop/:id", verifyToken, isAdmin, async (req, res) => {
+    try {
+        const deleted = await Lop.findByIdAndDelete(req.params.id);
+        if (!deleted) return res.status(404).json({ success: false, message: "Không tìm thấy lớp!" });
+        res.json({ success: true, message: "Xóa lớp thành công!" });
+    } catch (err) {
+        res.status(500).json({ success: false, message: "Lỗi server!" });
+    }
+});
+
+
+// === TIẾT HỌC ===
+
+// Sửa tiết học
+router.put("/sua-tiethoc/:id", verifyToken, isAdmin, async (req, res) => {
+    try {
+        const updated = await Tiethoc.findByIdAndUpdate(req.params.id, { number: req.body.number }, { new: true });
+        if (!updated) return res.status(404).json({ success: false, message: "Không tìm thấy tiết học!" });
+        res.json({ success: true, message: "Cập nhật tiết học thành công!", data: updated });
+    } catch (err) {
+        res.status(500).json({ success: false, message: "Lỗi server!" });
+    }
+});
+
+// Xóa tiết học
+router.delete("/xoa-tiethoc/:id", verifyToken, isAdmin, async (req, res) => {
+    try {
+        const deleted = await Tiethoc.findByIdAndDelete(req.params.id);
+        if (!deleted) return res.status(404).json({ success: false, message: "Không tìm thấy tiết học!" });
+        res.json({ success: true, message: "Xóa tiết học thành công!" });
+    } catch (err) {
+        res.status(500).json({ success: false, message: "Lỗi server!" });
+    }
+});
+
+
+// === BUỔI HỌC ===
+
+// Sửa buổi học
+router.put("/sua-buoihoc/:id", verifyToken, isAdmin, async (req, res) => {
+    try {
+        const updated = await Buoihoc.findByIdAndUpdate(req.params.id, { name: req.body.name }, { new: true });
+        if (!updated) return res.status(404).json({ success: false, message: "Không tìm thấy buổi học!" });
+        res.json({ success: true, message: "Cập nhật buổi học thành công!", data: updated });
+    } catch (err) {
+        res.status(500).json({ success: false, message: "Lỗi server!" });
+    }
+});
+
+// Xóa buổi học
+router.delete("/xoa-buoihoc/:id", verifyToken, isAdmin, async (req, res) => {
+    try {
+        const deleted = await Buoihoc.findByIdAndDelete(req.params.id);
+        if (!deleted) return res.status(404).json({ success: false, message: "Không tìm thấy buổi học!" });
+        res.json({ success: true, message: "Xóa buổi học thành công!" });
+    } catch (err) {
+        res.status(500).json({ success: false, message: "Lỗi server!" });
+    }
+});
+
+
+// === TUẦN HỌC ===
+
+// Sửa tuần học
+router.put("/sua-tuan/:id", verifyToken, isAdmin, async (req, res) => {
+    try {
+        const updated = await Tuanhoc.findByIdAndUpdate(req.params.id, { number: req.body.number }, { new: true });
+        if (!updated) return res.status(404).json({ success: false, message: "Không tìm thấy tuần học!" });
+        res.json({ success: true, message: "Cập nhật tuần học thành công!", data: updated });
+    } catch (err) {
+        res.status(500).json({ success: false, message: "Lỗi server!" });
+    }
+});
+
 
 module.exports = router;
