@@ -99,6 +99,48 @@ router.get('/danhsach-giaovien', verifyToken, isAdmin, async (req, res) => {
     }
 });
 
+// PUT: Sửa tài khoản giáo viên
+router.put("/sua-taikhoan/:id", verifyToken, isAdmin ,async (req, res) => {
+    try {
+      const { id } = req.params;
+      const {
+        username,
+        password,
+        ten,
+        ngaysinh,
+        email,
+        phone,
+        bomon,
+      } = req.body;
+  
+      const user = await User.findById(id);
+      if (!user) return res.status(404).json({ message: "Không tìm thấy tài khoản!" });
+  
+      // Cập nhật các trường
+      user.username = username || user.username;
+      user.ten = ten || user.ten;
+      user.ngaysinh = ngaysinh || user.ngaysinh;
+      user.email = email || user.email;
+      user.phone = phone || user.phone;
+      user.bomon = bomon || user.bomon;
+  
+      // Nếu có password mới thì mã hoá
+      if (password && password.trim() !== "") {
+        const salt = await bcrypt.genSalt(10);
+        user.password = await bcrypt.hash(password, salt);
+      }
+  
+      await user.save();
+  
+      res.json({ message: "Cập nhật thành công!", data: user });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: "Lỗi máy chủ!" });
+    }
+  });
+  
+  module.exports = router;
+  
 
 
 module.exports = router;

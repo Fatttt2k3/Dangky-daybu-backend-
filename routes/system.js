@@ -7,6 +7,7 @@ const Lop = require("../models/Lop");
 const Tiethoc = require("../models/Tiethoc");
 const Buoihoc = require("../models/Buoihoc");
 const Tuanhoc = require("../models/Tuanhoc");
+const Bomon = require("../models/Bomon")
 
 // Thêm môn học
 router.post("/them-monhoc", verifyToken, isAdmin, async (req, res) => {
@@ -254,6 +255,31 @@ router.put("/sua-tuan/:id", verifyToken, isAdmin, async (req, res) => {
         res.status(500).json({ success: false, message: "Lỗi server!" });
     }
 });
+
+// Lấy danh sách bộ môn
+router.get("/bomon", verifyToken, isAdmin, async (req, res) => {
+    const list = await Bomon.find();
+    res.json({ success: true, data: list });
+  });
+  
+  // Thêm bộ môn
+  router.post("/them-bomon", verifyToken, isAdmin, async (req, res) => {
+    const { ten } = req.body;
+    const existed = await Bomon.findOne({ ten });
+    if (existed)
+      return res.status(400).json({ success: false, message: "Đã tồn tại!" });
+  
+    const newOne = new Bomon({ ten });
+    await newOne.save();
+    res.json({ success: true, message: "Đã thêm!" });
+  });
+  
+  // Xoá bộ môn
+  router.delete("/xoa-bomon/:id", verifyToken, isAdmin, async (req, res) => {
+    await Bomon.findByIdAndDelete(req.params.id);
+    res.json({ success: true, message: "Đã xoá!" });
+  });
+
 
 
 module.exports = router;
