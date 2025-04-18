@@ -14,6 +14,7 @@ const UserSchema = new mongoose.Schema({
 
     
 });
+module.exports = mongoose.model("User", UserSchema);
 
 // Trước khi lưu user, mã hóa mật khẩu
 // UserSchema.pre("save", async function (next) {
@@ -22,5 +23,4 @@ const UserSchema = new mongoose.Schema({
 //     next();
 // });
 
-module.exports = mongoose.model("User", UserSchema);
     

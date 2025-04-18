@@ -1,6 +1,7 @@
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 
+
 const verifyToken = async (req, res, next) => {
     try {
         const token = req.header("Authorization").replace("Bearer ", "");
@@ -60,6 +61,8 @@ const authMiddleware = async (req, res, next) => {
         res.status(401).json({ message: "Token không hợp lệ!" });
     }
 };
+
+ 
 module.exports = { verifyToken, isAdmin, isTeacher, isTeacherOrAdmin, authMiddleware };
 
 
