@@ -11,6 +11,8 @@ const verifyToken = async (req, res, next) => {
         }
 
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        console.log("Decoded token:", decoded);
+
         const user = await User.findById(decoded.id).select("-password"); // Lấy thông tin user, bỏ password
 
         if (!user) {
@@ -29,6 +31,7 @@ const isAdmin = (req, res, next) => {
     if (req.user.role !== "admin") {
         return res.status(403).json({ success: false, message: "Không có quyền truy cập!" });
     }
+    
     next();
 };
 
