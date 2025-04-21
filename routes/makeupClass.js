@@ -4,64 +4,78 @@ const MakeupClass = require('../models/MakeupClass');
 const { verifyToken ,isAdmin, isTeacherOrAdmin, authMiddleware, isTeacher} = require("../middlewares/authMiddleware");
 const moment = require("moment");
 const mongoose = require('mongoose');
+const sendEmail = require("../routes/sendEmail");
 
 
 
 // Đăng ký lịch dạy bù (Chỉ giáo viên đăng nhập mới có thể đăng ký)
 router.post("/dangky-daybu", verifyToken, authMiddleware, async (req, res) => {
-    try {
-        const { songay, monhoc, tiethoc, buoihoc, lop, lido } = req.body;
+  try {
+      const { songay, monhoc, tiethoc, buoihoc, lop, lido } = req.body;
 
-        const newMakeupClass = new MakeupClass({
-            songay,
-            monhoc,
-            tiethoc,
-            buoihoc,
-            lop,
-            lido,
-            giaovien: req.user.ten,  // Lấy từ người dùng đăng nhập
-            bomon: req.user.bomon,   // Lấy từ người dùng đăng nhập
-            trangthai: "Cho duyet"
-        });
+      // Tạo bản ghi đăng ký dạy bù
+      const newMakeupClass = new MakeupClass({
+          songay,
+          monhoc,
+          tiethoc,
+          buoihoc,
+          lop,
+          lido,
+          giaovien: req.user.ten,   // Lấy từ token (giáo viên đăng nhập)
+          bomon: req.user.bomon,    // Lấy từ token (giáo viên đăng nhập)
+          trangthai: "Cho duyet"    // Đang chờ duyệt
+      });
 
-        await newMakeupClass.save();
-        res.status(201).json({ message: "Đăng ký dạy bù thành công!", data: newMakeupClass });
+      await newMakeupClass.save();
 
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
+      // Gửi email cho giáo viên về việc đăng ký thành công
+      if (req.user.email) {
+          const subjectTeacher = "Xác nhận đăng ký dạy bù";
+          const htmlTeacher = `
+              <p>Chào thầy/cô <b>${req.user.ten}</b>,</p>
+              <p>Thầy/cô đã đăng ký lịch dạy bù với các thông tin sau:</p>
+              <ul>
+                  <li><b>Ngày:</b> ${new Date(songay).toLocaleDateString("vi-VN")}</li>
+                  <li><b>Lớp:</b> ${lop}</li>
+                  <li><b>Môn:</b> ${monhoc}</li>
+                  <li><b>Buổi:</b> ${buoihoc}</li>
+                  <li><b>Tiết:</b> ${tiethoc.join(", ")}</li>
+                  <li><b>Lý do:</b> ${lido}</li>
+              </ul>
+              <p>Hệ thống đã ghi nhận yêu cầu của thầy/cô và đang chờ duyệt.</p>
+              <p>Trân trọng,<br/>Hệ thống hỗ trợ dạy bù</p>
+          `;
+          await sendEmail(req.user.email, subjectTeacher, htmlTeacher);
+      }
+
+      // Gửi email cho admin thông báo có yêu cầu mới
+      const adminEmail = "tanphatvipnet@gmail.com"; // Thay thế bằng email admin thật sự trong hệ thống
+      const subjectAdmin = "Yêu cầu đăng ký dạy bù mới";
+      const htmlAdmin = `
+          <p>Chào Admin,</p>
+          <p>Có một giáo viên đã đăng ký yêu cầu dạy bù với các thông tin sau:</p>
+          <ul>
+              <li><b>Giáo viên:</b> ${req.user.ten}</li>
+              <li><b>Ngày:</b> ${new Date(songay).toLocaleDateString("vi-VN")}</li>
+              <li><b>Lớp:</b> ${lop}</li>
+              <li><b>Môn:</b> ${monhoc}</li>
+              <li><b>Buổi:</b> ${buoihoc}</li>
+              <li><b>Tiết:</b> ${tiethoc.join(", ")}</li>
+              <li><b>Lý do:</b> ${lido}</li>
+          </ul>
+          <p>Hãy kiểm tra và duyệt yêu cầu này.</p>
+          <p>Trân trọng,<br/>Hệ thống hỗ trợ dạy bù</p>
+      `;
+      await sendEmail(adminEmail, subjectAdmin, htmlAdmin);
+
+      // Trả về phản hồi sau khi lưu dữ liệu và gửi email
+      res.status(201).json({ message: "Đăng ký dạy bù thành công và thông báo đã gửi!", data: newMakeupClass });
+
+  } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: error.message });
+  }
 });
-
-
-  //thời khoá Biểu
-  router.get("/thoikhoabieu1",verifyToken, isTeacherOrAdmin, async (req, res) => {
-    const { from, to, giaovien, lop, monhoc } = req.query;
-  
-    if (!from || !to) {
-      return res.status(400).json({ success: false, message: "Thiếu ngày bắt đầu hoặc kết thúc" });
-    }
-  
-    try {
-      const filter = {
-        trangthai: "Dong y",
-        songay: {
-          $gte: new Date(from),
-          $lte: new Date(to),
-        },
-      };
-  
-      if (giaovien) filter.giaovien = giaovien;
-      if (lop) filter.lop = lop;
-      if (monhoc) filter.monhoc = monhoc;
-  
-      const data = await MakeupClass.find(filter);
-      res.json({ success: true, data });
-    } catch (err) {
-      console.error("Lỗi khi truy vấn:", err);
-      res.status(500).json({ success: false, message: "Lỗi máy chủ" });
-    }
-  });
-
 
 // Lấy danh sách lịch dạy bù (có phân quyền)
 router.get('/danhsach-daybu',verifyToken,authMiddleware,async (req, res) => {
@@ -100,28 +114,57 @@ router.get('/lichdaygiaovien', verifyToken, isTeacher, async (req, res) => {
 
 // PUT /makeup-class/duyet-daybu/:id
 router.put('/duyet-daybu/:id', verifyToken, isAdmin, async (req, res) => {
-    try {
-        const { trangthai } = req.body;
+  try {
+      const { trangthai } = req.body;
 
-        if (!['Dong y', 'Tu choi'].includes(trangthai)) {
-            return res.status(400).json({ success: false, message: 'Trạng thái không hợp lệ!' });
-        }
+      if (!['Dong y', 'Tu choi'].includes(trangthai)) {
+          return res.status(400).json({ success: false, message: 'Trạng thái không hợp lệ!' });
+      }
 
-        const updated = await MakeupClass.findByIdAndUpdate(
-            req.params.id,
-            { trangthai },
-            { new: true }
-        );
+      const updated = await MakeupClass.findByIdAndUpdate(
+          req.params.id,
+          { trangthai },
+          { new: true }
+      );
 
-        if (!updated) {
-            return res.status(404).json({ success: false, message: 'Không tìm thấy lịch dạy bù!' });
-        }
+      if (!updated) {
+          return res.status(404).json({ success: false, message: 'Không tìm thấy lịch dạy bù!' });
+      }
 
-        res.json({ success: true, message: `Lịch đã được cập nhật trạng thái: ${trangthai}` });
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ success: false, message: 'Lỗi server!' });
-    }
+      // 🔍 Tìm giáo viên theo tên để lấy email
+      const giaovien = await require("../models/User").findOne({ ten: updated.giaovien });
+
+      if (giaovien?.email) {
+          // Soạn nội dung email
+          const subject = trangthai === 'Dong y' ? 'Lịch dạy bù đã được duyệt' : 'Lịch dạy bù bị từ chối';
+          const body = `
+              <p>Chào thầy/cô <b>${giaovien.ten}</b>,</p>
+              <p>Yêu cầu đăng ký dạy bù với thông tin sau đã được cập nhật:</p>
+              <ul>
+                  <li><b>Ngày:</b> ${new Date(updated.songay).toLocaleDateString("vi-VN")}</li>
+                  <li><b>Lớp:</b> ${updated.lop}</li>
+                  <li><b>Môn:</b> ${updated.monhoc}</li>
+                  <li><b>Buổi:</b> ${updated.buoihoc}</li>
+                  <li><b>Tiết:</b> ${updated.tiethoc.join(', ')}</li>
+                  <li><b>Trạng thái:</b> <span style="color:${trangthai === 'Dong y' ? 'green' : 'red'}">${trangthai}</span></li>
+              </ul>
+              <p>${trangthai === 'Dong y' 
+                  ? 'Vui lòng chuẩn bị bài giảng và lên lớp đúng giờ.' 
+                  : 'Nếu có thắc mắc, vui lòng liên hệ quản trị viên: 0915393154'}
+              </p>
+              <p>Trân trọng,<br/>Hệ thống hỗ trợ  đăng ký dạy bù</p>
+          `;
+
+          // Gửi email
+          await sendEmail(giaovien.email, subject, body);
+      }
+
+      res.json({ success: true, message: `Lịch đã được cập nhật trạng thái: ${trangthai}` });
+
+  } catch (err) {
+      console.error(err);
+      res.status(500).json({ success: false, message: 'Lỗi server!' });
+  }
 });
 
   
@@ -150,6 +193,7 @@ router.delete('/xoa/:id', verifyToken, isAdmin, async (req, res) => {
       res.status(500).json({ success: false, message: 'Lỗi server!' });
     }
   });
+  
 // router.delete('/xoa/:id', verifyToken, isAdmin, async (req, res) => {
 //     try {
 //         const { id } = req.params;
