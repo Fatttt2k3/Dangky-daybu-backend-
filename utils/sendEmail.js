@@ -19,9 +19,9 @@ const sendEmail = async (to, subject, text) => {
         };
 
         await transporter.sendMail(mailOptions);
-        console.log(`📩 Email đã gửi đến: ${to}`);
+        console.log(` Email đã gửi đến: ${to}`);
     } catch (error) {
-        console.error("❌ Lỗi gửi email:", error);
+        console.error(" Lỗi gửi email:", error);
     }
 };
 
