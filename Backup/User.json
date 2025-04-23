@@ -1,0 +1,62 @@
+[
+  {
+    "_id": "67e5afe9d153c6ca1daf881b",
+    "username": "kimminh",
+    "password": "$2b$10$QpexAAKJIK3cXPTYCBh9o.2TJYZhW68V8Yzd5RJcv250ARjHI3v0y",
+    "role": "teacher",
+    "ten": "Trần Thị Kim Minh",
+    "ngaysinh": "2004-04-10",
+    "email": "fat290903@gmail.com",
+    "phone": "0925393154",
+    "bomon": "Khoa Học Tự Nhiên",
+    "__v": 0
+  },
+  {
+    "_id": "67f749115f70b2cd80bca7d5",
+    "username": "admin",
+    "password": "$2b$10$p.1bTKohzaGnwl.hKfdO8eJo7ISg/L79ESRyZ.Gw6dlvlIcdvx3Bi",
+    "role": "admin",
+    "ten": "Nguyễn Tấn Phát",
+    "ngaysinh": "2003-09-29",
+    "email": "tanphatvipnet@gmail.com",
+    "phone": "0915393154",
+    "bomon": "Khoa Học Tự Nhiên",
+    "__v": 0
+  },
+  {
+    "_id": "67f80b74ed102262a2646733",
+    "username": "anhtrieu",
+    "password": "$2b$10$hAzE1wM3Fai2LwvkcMo90eI7O5voKhsyHuVYQYUmJKqNpin3rQ.5a",
+    "role": "teacher",
+    "ten": "Nguyễn Hồ Anh Triệu",
+    "ngaysinh": "2003-01-01",
+    "email": "tyh33607@gmail.com",
+    "phone": "0123456789",
+    "bomon": "Khoa Học Tự Nhiên",
+    "__v": 0
+  },
+  {
+    "_id": "680738422c4d06f1bca87d8c",
+    "username": "sangphuong",
+    "password": "$2b$10$yEVNTPgs/RjeCdH5md4mBukzPDMCpXyElREN2VaKy./PJ.t2OF6ri",
+    "role": "teacher",
+    "ten": "Phương Ngọc Sáng",
+    "ngaysinh": "2003-06-08",
+    "email": "minhsangvnvn17t@gmail.com",
+    "phone": "0815375738",
+    "bomon": "Khoa học xã hội",
+    "__v": 0
+  },
+  {
+    "_id": "680750b94cf82cb767e26715",
+    "username": "tanphat",
+    "password": "$2b$10$aL/XeSlex32owLRP6ETqPO5MbufUSe340I5oj73aR7rQ2/HAgNbqK",
+    "role": "teacher",
+    "ten": "Tấn Phát",
+    "ngaysinh": "2003-09-29",
+    "email": "tuicudon2000@gmail.com",
+    "phone": "098766543",
+    "bomon": "Quốc phòng",
+    "__v": 0
+  }
+]
