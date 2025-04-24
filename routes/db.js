@@ -6,6 +6,7 @@ const router = express.Router();
 const { verifyToken, isAdmin } = require("../middlewares/authMiddleware");
 const MakeupClass = require("../models/MakeupClass");
 
+
 // ====================== BACKUP ======================
 
 // Backup một bảng theo tên
@@ -14,14 +15,18 @@ router.get("/backup/:collection", verifyToken, isAdmin, async (req, res) => {
     const name = req.params.collection;
     const model = mongoose.model(name);
     const data = await model.find({});
-    const filePath = path.join(__dirname, `../backup/${name}.json`);
-    fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
-    res.download(filePath, `${name}.json`);
+
+    const json = JSON.stringify(data, null, 2);
+
+    res.setHeader("Content-Type", "application/json");
+    res.setHeader("Content-Disposition", `attachment; filename=${name}.json`);
+    res.send(json);
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Lỗi backup bảng!" });
   }
 });
+
 
 // Backup toàn bộ cơ sở dữ liệu
 router.get("/backup-all", verifyToken, isAdmin, async (req, res) => {
@@ -34,14 +39,17 @@ router.get("/backup-all", verifyToken, isAdmin, async (req, res) => {
       allData[name] = await model.find({});
     }
 
-    const filePath = path.join(__dirname, `../backup/backup_all.json`);
-    fs.writeFileSync(filePath, JSON.stringify(allData, null, 2));
-    res.download(filePath, `backup_all.json`);
+    const json = JSON.stringify(allData, null, 2);
+
+    res.setHeader("Content-Type", "application/json");
+    res.setHeader("Content-Disposition", "attachment; filename=backup_all.json");
+    res.send(json);
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Lỗi backup toàn bộ!" });
   }
 });
+
 
 // ====================== IMPORT ======================
 
