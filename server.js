@@ -9,7 +9,6 @@ dotenv.config();
 
 const app = express();
 
-// 👉 Thêm ở đây, ngay sau khi tạo app:
 const fileUpload = require("express-fileupload");
 app.use(fileUpload());
 
