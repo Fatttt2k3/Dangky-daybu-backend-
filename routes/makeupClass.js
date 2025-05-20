@@ -76,6 +76,21 @@ router.post("/dangky-daybu", verifyToken, authMiddleware, async (req, res) => {
       res.status(500).json({ message: error.message });
   }
 });
+//lấy tất cả lịch dạy
+router.get('/lichdaytatca', verifyToken, authMiddleware, async (req, res) => {
+  try {
+    // Optional: Giới hạn nếu bạn muốn chỉ cho admin
+    // if (req.user.role !== "admin") {
+    //   return res.status(403).json({ message: "Không có quyền truy cập." });
+    // }
+
+    const allSchedules = await MakeupClass.find({});
+    res.json({ success: true, data: allSchedules });
+  } catch (error) {
+    console.error("Lỗi lấy toàn bộ lịch dạy bù:", error);
+    res.status(500).json({ success: false, message: 'Lỗi server!' });
+  }
+});
 
 // Lấy danh sách lịch dạy bù (có phân quyền)
 router.get('/danhsach-daybu',verifyToken,authMiddleware,async (req, res) => {
@@ -86,6 +101,11 @@ router.get('/danhsach-daybu',verifyToken,authMiddleware,async (req, res) => {
         if (req.user.role === 'teacher') {
             filter = { giaovien: req.user.ten };
         }
+         // Nếu là admin, chỉ lấy lịch của họ
+        if (req.user.role === 'admin') {
+            filter = { giaovien: req.user.ten };
+        }
+
 
         // Lấy danh sách từ MongoDB
         const classes = await MakeupClass.find(filter);
@@ -97,7 +117,7 @@ router.get('/danhsach-daybu',verifyToken,authMiddleware,async (req, res) => {
 });
 
 // Lấy danh sách lịch dạy bù (chỉ giáo viên đang đăng nhập xem được lịch của mình)
-router.get('/lichdaygiaovien', verifyToken, isTeacher, async (req, res) => {
+router.get('/lichdaygiaovien', verifyToken,authMiddleware, async (req, res) => {
   try {
       const filter = { giaovien: req.user.ten };
 

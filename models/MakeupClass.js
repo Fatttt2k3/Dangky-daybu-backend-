@@ -11,7 +11,8 @@ const MakeupClassSchema = new mongoose.Schema({
     giaovien: { type: String, required: true },  // <-- Thêm giáo viên vào schema
     bomon: { type: String, required: true },     // <-- Thêm bộ môn vào schema
     lido: { type: String, required: true },
-    trangthai: { type: String, enum: ['Cho duyet', 'Dong y', 'Tu choi'], default: 'Cho duyet' }
+    trangthai: { type: String, enum: ['Cho duyet', 'Dong y', 'Tu choi'], default: 'Cho duyet' },
+    
 });
 
 module.exports = mongoose.model('MakeupClass', MakeupClassSchema);
