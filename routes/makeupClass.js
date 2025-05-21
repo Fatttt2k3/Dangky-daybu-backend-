@@ -11,69 +11,85 @@ const sendEmail = require("../routes/sendEmail");
 // Đăng ký lịch dạy bù (Chỉ giáo viên đăng nhập mới có thể đăng ký)
 router.post("/dangky-daybu", verifyToken, authMiddleware, async (req, res) => {
   try {
-      const { songay, monhoc, tiethoc, buoihoc, lop, lido } = req.body;
+    const { songay, monhoc, tiethoc, buoihoc, lop, lido } = req.body;
 
-      // Tạo bản ghi đăng ký dạy bù
-      const newMakeupClass = new MakeupClass({
-          songay,
-          monhoc,
-          tiethoc,
-          buoihoc,
-          lop,
-          lido,
-          giaovien: req.user.ten,   // Lấy từ token (giáo viên đăng nhập)
-          bomon: req.user.bomon,    // Lấy từ token (giáo viên đăng nhập)
-          trangthai: "Cho duyet"    // Đang chờ duyệt
+    // Kiểm tra trùng lịch
+    const existing = await MakeupClass.find({
+      songay: new Date(songay),
+      buoihoc,
+      lop,
+      tiethoc: { $in: tiethoc }, // chỉ cần trùng 1 tiết là báo trùng
+    });
+
+    if (existing.length > 0) {
+      return res.status(403).json({
+        message: "Lịch dạy bù bị trùng với giáo viên khác đã đăng ký!",
+        conflicts: existing,
       });
+    }
 
-      await newMakeupClass.save();
+    // Tạo bản ghi mới
+    const newMakeupClass = new MakeupClass({
+      songay,
+      monhoc,
+      tiethoc,
+      buoihoc,
+      lop,
+      lido,
+      giaovien: req.user.ten,
+      bomon: req.user.bomon,
+      trangthai: "Cho duyet",
+    });
 
-      // Gửi email cho giáo viên về việc đăng ký thành công
-      if (req.user.email) {
-          const subjectTeacher = "Xác nhận đăng ký dạy bù";
-          const htmlTeacher = `
-              <p>Chào thầy/cô <b>${req.user.ten}</b>,</p>
-              <p>Thầy/cô đã đăng ký lịch dạy bù với các thông tin sau:</p>
-              <ul>
-                  <li><b>Ngày:</b> ${new Date(songay).toLocaleDateString("vi-VN")}</li>
-                  <li><b>Lớp:</b> ${lop}</li>
-                  <li><b>Môn:</b> ${monhoc}</li>
-                  <li><b>Buổi:</b> ${buoihoc}</li>
-                  <li><b>Tiết:</b> ${tiethoc.join(", ")}</li>
-                  <li><b>Lý do:</b> ${lido}</li>
-              </ul>
-              <p>Hệ thống đã ghi nhận yêu cầu của thầy/cô và đang chờ duyệt.</p>
-              <p>Trân trọng,<br/>Hệ thống hỗ trợ dạy bù</p>
-          `;
-          await sendEmail(req.user.email, subjectTeacher, htmlTeacher);
-      }
+    await newMakeupClass.save();
 
-      // Gửi email cho admin thông báo có yêu cầu mới
-      const adminEmail = "tanphatvipnet@gmail.com"; // Thay thế bằng email admin thật sự trong hệ thống
-      const subjectAdmin = "Yêu cầu đăng ký dạy bù mới";
-      const htmlAdmin = `
-          <p>Chào Admin,</p>
-          <p>Có một giáo viên đã đăng ký yêu cầu dạy bù với các thông tin sau:</p>
-          <ul>
-              <li><b>Giáo viên:</b> ${req.user.ten}</li>
-              <li><b>Ngày:</b> ${new Date(songay).toLocaleDateString("vi-VN")}</li>
-              <li><b>Lớp:</b> ${lop}</li>
-              <li><b>Môn:</b> ${monhoc}</li>
-              <li><b>Buổi:</b> ${buoihoc}</li>
-              <li><b>Tiết:</b> ${tiethoc.join(", ")}</li>
-              <li><b>Lý do:</b> ${lido}</li>
-          </ul>
-          <p>Hãy kiểm tra và duyệt yêu cầu này.</p>
-          <p>Trân trọng,<br/>Hệ thống hỗ trợ dạy bù</p>
+    // Gửi email cho giáo viên
+    if (req.user.email) {
+      const subjectTeacher = "Xác nhận đăng ký dạy bù";
+      const htmlTeacher = `
+        <p>Chào thầy/cô <b>${req.user.ten}</b>,</p>
+        <p>Thầy/cô đã đăng ký lịch dạy bù với các thông tin sau:</p>
+        <ul>
+            <li><b>Ngày:</b> ${new Date(songay).toLocaleDateString("vi-VN")}</li>
+            <li><b>Lớp:</b> ${lop}</li>
+            <li><b>Môn:</b> ${monhoc}</li>
+            <li><b>Buổi:</b> ${buoihoc}</li>
+            <li><b>Tiết:</b> ${tiethoc.join(", ")}</li>
+            <li><b>Lý do:</b> ${lido}</li>
+        </ul>
+        <p>Hệ thống đã ghi nhận yêu cầu của thầy/cô và đang chờ duyệt.</p>
+        <p>Trân trọng,<br/>Hệ thống hỗ trợ dạy bù</p>
       `;
-      await sendEmail(adminEmail, subjectAdmin, htmlAdmin);
+      await sendEmail(req.user.email, subjectTeacher, htmlTeacher);
+    }
 
-      // Trả về phản hồi sau khi lưu dữ liệu và gửi email
-      res.status(201).json({ message: "Đăng ký dạy bù thành công và thông báo đã gửi!", data: newMakeupClass });
+    // Gửi email cho admin
+    const adminEmail = "tanphatvipnet@gmail.com";
+    const subjectAdmin = "Yêu cầu đăng ký dạy bù mới";
+    const htmlAdmin = `
+      <p>Chào Admin,</p>
+      <p>Có một giáo viên đã đăng ký yêu cầu dạy bù với các thông tin sau:</p>
+      <ul>
+          <li><b>Giáo viên:</b> ${req.user.ten}</li>
+          <li><b>Ngày:</b> ${new Date(songay).toLocaleDateString("vi-VN")}</li>
+          <li><b>Lớp:</b> ${lop}</li>
+          <li><b>Môn:</b> ${monhoc}</li>
+          <li><b>Buổi:</b> ${buoihoc}</li>
+          <li><b>Tiết:</b> ${tiethoc.join(", ")}</li>
+          <li><b>Lý do:</b> ${lido}</li>
+      </ul>
+      <p>Hãy kiểm tra và duyệt yêu cầu này.</p>
+      <p>Trân trọng,<br/>Hệ thống hỗ trợ dạy bù</p>
+    `;
+    await sendEmail(adminEmail, subjectAdmin, htmlAdmin);
 
+    res.status(201).json({
+      message: "Đăng ký dạy bù thành công và thông báo đã gửi!",
+      data: newMakeupClass,
+    });
   } catch (error) {
-      console.error(error);
-      res.status(500).json({ message: error.message });
+    console.error("Lỗi đăng ký:", error);
+    res.status(500).json({ message: "Lỗi server khi đăng ký dạy bù!" });
   }
 });
 //lấy tất cả lịch dạy
